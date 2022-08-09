@@ -54,7 +54,7 @@ class Logger:
     False - Default.
     :param set_handlers_format: Changing the format of handlers.
     'all' - change them all.
-    [uvicorn, loggername2] - you can pass a list with names to change them.
+    [uvicorn, loggername2] - you can pass a tuple with names to change them.
     """
 
     def __init__(self, logger_name='ko_logging', logger_level=logging.DEBUG,
@@ -69,7 +69,7 @@ class Logger:
                 default_logger = logging.getLogger(logger_name)
                 for handler in default_logger.handlers:
                     handler.setFormatter(CustomFormatter(format_handler, color))
-        if type(set_handlers_format) is list:
+        if type(set_handlers_format) is tuple:
             for logger_name in set_handlers_format:
                 default_logger = logging.getLogger(logger_name)
                 for handler in default_logger.handlers:
