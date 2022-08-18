@@ -45,41 +45,43 @@ class CustomFormatter(logging.Formatter):
 class Logger:
     """
     Class for creating a logger.
-    :param logger_name: Selecting a logger name.
-    :param logger_level: Logger level selection.
-    :param format_handler: Changing the logger format.
+    :param name: Selecting a logger name.
+    :param ko_logger_level: Logger level selection.
+    :param handler_format: Changing the logger format.
     (LogRecord attributes) Uses string https://docs.python.org/3/library/logging.html#logrecord-attributes .
-    :param color: Selects whether the logs will be colored.
+    :param colorize: Selects whether the logs will be colored.
     True - colorize (Logs may not display correctly. For example, in Grafana when viewing logs).
     False - Default.
     :param set_handlers_format: Changing the format of handlers.
     'all' - change them all.
-    [uvicorn, loggername2] - you can pass a tuple with names to change them.
+    [uvicorn, loggername2] - you can pass a list with names to change them.
     """
 
-    def __init__(self, logger_name='ko_logging', logger_level=logging.DEBUG,
-                 format_handler="[%(name)s] [%(process)s] [%(levelname)s] [%(pathname)s:%(lineno)d]: %(message)s",
-                 color=False, set_handlers_format="all"):
-        self.logger = logging.getLogger(logger_name)
+    def __init__(self, name: str = 'ko_logger', ko_logger_level: logging = logging.DEBUG,
+                 handler_format: str = "[%(name)s] [%(process)s] [%(levelname)s] [%(pathname)s:%(lineno)d]: %(message)s",
+                 colorize: bool = False, set_handlers_format: str | tuple = "all"):
+        self.ko_logger = logging.getLogger(name)
         self.custom_handler = logging.StreamHandler()
-        self.logger.setLevel(logger_level)
-        self.logger.addHandler(self.custom_handler)
+        self.ko_logger.setLevel(ko_logger_level)
+        self.ko_logger.addHandler(self.custom_handler)
         if set_handlers_format == "all":
-            for logger_name in logging.root.manager.loggerDict:
-                default_logger = logging.getLogger(logger_name)
+            for name in logging.root.manager.loggerDict:
+                default_logger = logging.getLogger(name)
+                default_logger.handlers = self.ko_logger.handlers
                 for handler in default_logger.handlers:
-                    handler.setFormatter(CustomFormatter(format_handler, color))
+                    handler.setFormatter(CustomFormatter(handler_format, colorize))
         if type(set_handlers_format) is tuple:
-            for logger_name in set_handlers_format:
-                default_logger = logging.getLogger(logger_name)
+            for name in set_handlers_format:
+                default_logger = logging.getLogger(name)
+                default_logger.handlers = self.ko_logger.handlers
                 for handler in default_logger.handlers:
-                    handler.setFormatter(CustomFormatter(format_handler, color))
-        self.logger.info(
-            f'Logger "{self.logger.name}" has been created. logger.level={self.logger.level}')
+                    handler.setFormatter(CustomFormatter(handler_format, colorize))
+        self.ko_logger.info(
+            f'Logger "{self.ko_logger.name}" has been created. logger.level={self.ko_logger.level}')
 
 
 @lru_cache
-def get_logger(logger_name: str = 'logger', logger_level=logging.DEBUG,
-               format_handler: str = "[%(name)s] [%(process)s] [%(levelname)s] [%(pathname)s:%(lineno)d]: %(message)s",
-               color: bool = False, set_handlers_format: str = "all"):
-    return Logger(**locals()).logger
+def get_logger(name='ko_logger', ko_logger_level=logging.DEBUG,
+               handler_format="[%(name)s] [%(process)s] [%(levelname)s] [%(pathname)s:%(lineno)d]: %(message)s",
+               colorize=False, set_handlers_format="all"):
+    return Logger(**locals()).ko_logger
